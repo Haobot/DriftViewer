@@ -207,7 +207,7 @@ export function createUI(store: Store, render: () => void) {
       const onChange = () => store.setConditions(readConditions());
       channelSelect.addEventListener('change', onChange);
       opSelect.addEventListener('change', onChange);
-      valueInput.addEventListener('input', onChange);
+      valueInput.addEventListener('change', onChange);
       combineSelect.addEventListener('change', onChange);
 
       conditionList.appendChild(row);
