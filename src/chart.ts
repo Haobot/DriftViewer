@@ -6,6 +6,8 @@ export interface ChartConfig {
   padding: { top: number; right: number; bottom: number; left: number };
 }
 
+interface Point { x: number; y: number; }
+
 export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not supported');
@@ -61,14 +63,92 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     ctx.stroke();
   };
 
+  const getMousePos = (e: MouseEvent): Point => {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+  let lastSamples: Sample[] = [];
+  let lastVisibleChannels: Map<ChannelKey, { color: string; min: number; max: number }> = new Map();
+
+  const drawSelection = (startX: number, endX: number) => {
+    const { padding, height } = config;
+    const plotH = height - padding.top - padding.bottom;
+    const left = Math.min(startX, endX);
+    const width = Math.abs(endX - startX);
+    ctx.save();
+    ctx.fillStyle = 'rgba(92, 200, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(92, 200, 255, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(left, padding.top, width, plotH);
+    ctx.strokeRect(left, padding.top, width, plotH);
+    ctx.restore();
+  };
+
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragEndX = 0;
+  let rangeCallback: ((startMs: number, endMs: number) => void) | null = null;
+
+  const xToTimeMs = (x: number): number => {
+    if (lastSamples.length < 2) return 0;
+    const { padding, width } = config;
+    const plotLeft = padding.left;
+    const plotW = width - padding.left - padding.right;
+    const tStart = lastSamples[0].t;
+    const tEnd = lastSamples[lastSamples.length - 1].t;
+    const ratio = clamp((x - plotLeft) / plotW, 0, 1);
+    return tStart + ratio * (tEnd - tStart);
+  };
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (lastSamples.length < 2) return;
+    const pos = getMousePos(e);
+    isDragging = true;
+    dragStartX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
+    dragEndX = dragStartX;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const pos = getMousePos(e);
+    dragEndX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
+    if (rangeCallback && Math.abs(dragEndX - dragStartX) > 4) {
+      rangeCallback(xToTimeMs(dragStartX), xToTimeMs(dragEndX));
+    }
+    draw(lastSamples, lastVisibleChannels);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    if (Math.abs(dragEndX - dragStartX) > 4 && rangeCallback) {
+      rangeCallback(xToTimeMs(dragStartX), xToTimeMs(dragEndX));
+    }
+  });
+
   const draw = (samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) => {
+    lastSamples = samples;
+    lastVisibleChannels = visibleChannels;
     drawGrid();
     for (const [key, meta] of visibleChannels) {
       drawSeries(samples, key, meta.color, meta.min, meta.max);
+    }
+    if (isDragging) {
+      drawSelection(dragStartX, dragEndX);
     }
   };
 
   resize();
 
-  return { resize, draw };
+  return {
+    resize,
+    draw,
+    onRangeSelect: (callback: (startMs: number, endMs: number) => void) => {
+      rangeCallback = callback;
+      return () => { rangeCallback = null; };
+    },
+  };
 }
