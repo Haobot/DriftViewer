@@ -81,29 +81,32 @@ body {
 .workspace { margin-top: 12px; }
 
 .statusCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .statusCard {
-  background: var(--panel);
+  flex: 1 1 100px;
+  min-width: 90px;
+  padding: 12px;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
+  text-align: center;
 }
 
 .statusCard .label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
-  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
 .statusCard .value {
   font-size: 18px;
   font-weight: 700;
-  margin-top: 4px;
+  color: var(--text);
 }
 
 .controlsPanel {
