@@ -20,6 +20,10 @@ function initApp() {
   const store = createStore();
   const canvas = document.getElementById('chartCanvas') as HTMLCanvasElement;
   const chartEmpty = document.getElementById('chartEmpty') as HTMLDivElement;
+  const chartPanel = document.querySelector('.chartPanel') as HTMLDivElement;
+  const tooltip = document.getElementById('chartTooltip') as HTMLDivElement;
+  const tooltipTime = tooltip.querySelector('.tooltipTime') as HTMLDivElement;
+  const tooltipValues = tooltip.querySelector('.tooltipValues') as HTMLDivElement;
   const chart = createChart(canvas, {
     width: canvas.clientWidth || 800,
     height: 360,
@@ -61,9 +65,33 @@ function initApp() {
     downloadExport(data);
   }
 
-  const ui = createUI(store, render);
+  const ui = createUI(store, render, () => {
+    chart.resize();
+    render();
+  });
   chart.onRangeSelect((startMs, endMs) => {
     store.setTimeRange(Math.min(startMs, endMs), Math.max(startMs, endMs));
+  });
+  chart.onHover((info) => {
+    if (!info) {
+      tooltip.hidden = true;
+      return;
+    }
+    const panelRect = chartPanel.getBoundingClientRect();
+    const left = info.clientX - panelRect.left + 12;
+    const top = info.clientY - panelRect.top + 12;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    tooltipTime.textContent = `t: ${info.t} ms`;
+    tooltipValues.innerHTML = '';
+    for (const [key, value] of info.values) {
+      const ch = CHANNELS.find((c) => c.key === key);
+      const row = document.createElement('div');
+      row.className = 'tooltipValue';
+      row.innerHTML = `<span>${ch?.label ?? key}</span><strong style="color:${ch?.color ?? 'inherit'}">${value}</strong>`;
+      tooltipValues.appendChild(row);
+    }
+    tooltip.hidden = false;
   });
   store.subscribe(render);
   exportBtn.addEventListener('click', doExport);

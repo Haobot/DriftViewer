@@ -16,10 +16,12 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
 
   const resize = () => {
     dpr = window.devicePixelRatio || 1;
-    canvas.width = config.width * dpr;
-    canvas.height = config.height * dpr;
-    canvas.style.width = `${config.width}px`;
-    canvas.style.height = `${config.height}px`;
+    const w = canvas.clientWidth || config.width || 800;
+    const h = canvas.clientHeight || config.height || 360;
+    config.width = w;
+    config.height = h;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
 
@@ -91,6 +93,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   let dragStartX = 0;
   let dragEndX = 0;
   let rangeCallback: ((startMs: number, endMs: number) => void) | null = null;
+  let hoverCallback: ((info: { t: number; clientX: number; clientY: number; values: Map<ChannelKey, number> } | null) => void) | null = null;
 
   const xToTimeMs = (x: number): number => {
     if (lastSamples.length < 2) return 0;
@@ -107,6 +110,26 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
       if (d < best) {
         best = d;
         closest = s.t;
+      }
+    }
+    return closest;
+  };
+
+  const findNearestSample = (x: number): Sample | null => {
+    if (lastSamples.length === 0) return null;
+    const { padding, width } = config;
+    const plotW = width - padding.left - padding.right;
+    const ratio = clamp((x - padding.left) / plotW, 0, 1);
+    const tStart = lastSamples[0].t;
+    const tEnd = lastSamples[lastSamples.length - 1].t;
+    const targetT = tStart + ratio * (tEnd - tStart);
+    let closest: Sample | null = null;
+    let best = Infinity;
+    for (const s of lastSamples) {
+      const d = Math.abs(s.t - targetT);
+      if (d < best) {
+        best = d;
+        closest = s;
       }
     }
     return closest;
@@ -138,6 +161,28 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   window.addEventListener('mousemove', handleMouseMove);
   window.addEventListener('mouseup', handleMouseUp);
 
+  const handleCanvasMouseMove = (e: MouseEvent) => {
+    if (isDragging || lastSamples.length === 0 || !hoverCallback) return;
+    const pos = getMousePos(e);
+    const s = findNearestSample(pos.x);
+    if (!s) {
+      hoverCallback(null);
+      return;
+    }
+    const values = new Map<ChannelKey, number>();
+    for (const key of lastVisibleChannels.keys()) {
+      values.set(key, Number(s[key] ?? 0));
+    }
+    hoverCallback({ t: s.t, clientX: e.clientX, clientY: e.clientY, values });
+  };
+
+  const handleCanvasMouseLeave = () => {
+    if (hoverCallback) hoverCallback(null);
+  };
+
+  canvas.addEventListener('mousemove', handleCanvasMouseMove);
+  canvas.addEventListener('mouseleave', handleCanvasMouseLeave);
+
   const draw = (samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) => {
     lastSamples = samples;
     lastVisibleChannels = visibleChannels;
@@ -166,9 +211,15 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
       dragEndX = 0;
       draw(lastSamples, lastVisibleChannels);
     },
+    onHover: (callback: (info: { t: number; clientX: number; clientY: number; values: Map<ChannelKey, number> } | null) => void) => {
+      hoverCallback = callback;
+      return () => { hoverCallback = null; };
+    },
     destroy: () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mousemove', handleCanvasMouseMove);
+      canvas.removeEventListener('mouseleave', handleCanvasMouseLeave);
     },
   };
 }

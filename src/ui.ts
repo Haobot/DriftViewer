@@ -3,7 +3,7 @@ import type { Condition } from './types';
 import { CHANNELS } from './channels';
 import { loadFile, type LoadResult } from './loader';
 
-export function createUI(store: Store, render: () => void) {
+export function createUI(store: Store, render: () => void, onFileLoaded?: () => void) {
   void render; // used via store.subscribe(render) in main.ts
   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
   const dropZone = document.getElementById('dropZone') as HTMLDivElement;
@@ -43,6 +43,7 @@ export function createUI(store: Store, render: () => void) {
       dropZone.hidden = true;
       workspace.hidden = false;
       updateRangeInputs(result.samples);
+      if (onFileLoaded) requestAnimationFrame(onFileLoaded);
     });
   }
 
