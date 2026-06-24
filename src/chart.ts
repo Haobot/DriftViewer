@@ -160,7 +160,11 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
       return () => { rangeCallback = null; };
     },
     cancelDrag: () => {
+      if (!isDragging) return;
       isDragging = false;
+      dragStartX = 0;
+      dragEndX = 0;
+      draw(lastSamples, lastVisibleChannels);
     },
     destroy: () => {
       window.removeEventListener('mousemove', handleMouseMove);

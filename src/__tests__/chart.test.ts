@@ -102,4 +102,20 @@ describe('createChart range selection', () => {
 
     chart.destroy();
   });
+
+  it('cancelDrag aborts an active drag and clears the overlay', () => {
+    const canvas = makeCanvas();
+    const chart = createChart(canvas, CONFIG);
+    chart.draw(makeSamples(11), new Map());
+
+    const callback = vi.fn();
+    chart.onRangeSelect(callback);
+
+    canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: 60, bubbles: true }));
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, bubbles: true }));
+    chart.cancelDrag();
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, bubbles: true }));
+
+    expect(callback).not.toHaveBeenCalled();
+  });
 });
