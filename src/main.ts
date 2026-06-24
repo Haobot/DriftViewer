@@ -19,6 +19,7 @@ function isTypingTarget(e: KeyboardEvent): boolean {
 function initApp() {
   const store = createStore();
   const canvas = document.getElementById('chartCanvas') as HTMLCanvasElement;
+  const chartEmpty = document.getElementById('chartEmpty') as HTMLDivElement;
   const chart = createChart(canvas, {
     width: canvas.clientWidth || 800,
     height: 360,
@@ -30,6 +31,7 @@ function initApp() {
 
   const render = () => {
     const state = store.getState();
+    chartEmpty.hidden = state.samples.length > 0;
     const visible = new Map<ChannelKey, { color: string; min: number; max: number }>();
     state.filter.visibleChannels.forEach((key) => {
       const ch = CHANNELS.find((c) => c.key === key);
