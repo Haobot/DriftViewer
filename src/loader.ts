@@ -37,12 +37,14 @@ export function parseMus4Tub(text: string): LoadResult {
     return { ok: false, error: '缺少 samples 数组' };
   }
 
-  const samples: Sample[] = data.samples.map((item: unknown, index: number) => {
+  const samples: Sample[] = [];
+  for (let index = 0; index < data.samples.length; index++) {
+    const item = data.samples[index];
     if (!item || typeof item !== 'object') {
-      throw new Error(`samples[${index}] 不是对象`);
+      return { ok: false, error: `samples[${index}] 不是对象` };
     }
     const s = item as Record<string, unknown>;
-    return {
+    samples.push({
       seq: Number(s.seq ?? 0),
       t: Number(s.t ?? 0),
       dt: Number(s.dt ?? 0),
@@ -72,8 +74,8 @@ export function parseMus4Tub(text: string): LoadResult {
       de: s.de !== undefined ? Number(s.de) : undefined,
       da: s.da !== undefined ? Number(s.da) : undefined,
       dc: s.dc !== undefined ? Number(s.dc) : undefined,
-    };
-  });
+    });
+  }
 
   const tub: Mus4Tub = {
     schema,
@@ -95,6 +97,7 @@ export function loadFile(file: File): Promise<LoadResult> {
       resolve(parseMus4Tub(text));
     };
     reader.onerror = () => resolve({ ok: false, error: '文件读取失败' });
+    reader.onabort = () => resolve({ ok: false, error: '文件读取已取消' });
     reader.readAsText(file);
   });
 }
