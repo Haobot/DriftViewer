@@ -27,6 +27,8 @@ function makeContext(): CanvasRenderingContext2D {
     save: vi.fn(),
     restore: vi.fn(),
     setTransform: vi.fn(),
+    fillText: vi.fn(),
+    measureText: vi.fn(() => ({ width: 0 })),
   } as unknown as CanvasRenderingContext2D;
 }
 

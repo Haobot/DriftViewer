@@ -89,9 +89,58 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     ctx.restore();
   };
 
+  const drawYAxis = () => {
+    if (lastVisibleChannels.size === 0) return;
+    const { width, height, padding } = config;
+    const plotH = height - padding.top - padding.bottom;
+    const x = width - padding.right;
+    const first = Array.from(lastVisibleChannels.entries())[0];
+    const [key, meta] = first;
+
+    ctx.save();
+    ctx.strokeStyle = '#5a6b7d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, padding.top);
+    ctx.lineTo(x, height - padding.bottom);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8fa1b5';
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i <= 4; i++) {
+      const y = padding.top + (i * plotH) / 4;
+      const ratio = 1 - i / 4;
+      const value = meta.min + ratio * (meta.max - meta.min);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 5, y);
+      ctx.stroke();
+      ctx.fillText(`${value.toFixed(0)} ${key}`, x - 7, y);
+    }
+    ctx.restore();
+  };
+
+  const drawCrosshair = () => {
+    if (!isHovering || lastSamples.length === 0) return;
+    const { padding, height } = config;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(hoverX, padding.top);
+    ctx.lineTo(hoverX, height - padding.bottom);
+    ctx.stroke();
+    ctx.restore();
+  };
+
   let isDragging = false;
   let dragStartX = 0;
   let dragEndX = 0;
+  let isHovering = false;
+  let hoverX = 0;
   let rangeCallback: ((startMs: number, endMs: number) => void) | null = null;
   let hoverCallback: ((info: { t: number; clientX: number; clientY: number; values: Map<ChannelKey, number> } | null) => void) | null = null;
 
@@ -164,6 +213,9 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   const handleCanvasMouseMove = (e: MouseEvent) => {
     if (isDragging || lastSamples.length === 0 || !hoverCallback) return;
     const pos = getMousePos(e);
+    hoverX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
+    isHovering = true;
+    draw(lastSamples, lastVisibleChannels);
     const s = findNearestSample(pos.x);
     if (!s) {
       hoverCallback(null);
@@ -177,6 +229,8 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   };
 
   const handleCanvasMouseLeave = () => {
+    isHovering = false;
+    draw(lastSamples, lastVisibleChannels);
     if (hoverCallback) hoverCallback(null);
   };
 
@@ -190,6 +244,8 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     for (const [key, meta] of visibleChannels) {
       drawSeries(samples, key, meta.color, meta.min, meta.max);
     }
+    drawYAxis();
+    drawCrosshair();
     if (isDragging) {
       drawSelection(dragStartX, dragEndX);
     }
