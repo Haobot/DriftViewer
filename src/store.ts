@@ -15,6 +15,7 @@ export function createStore() {
     original: null,
     samples: [],
     filter: createEmptyFilter(),
+    filteredSamples: [],
   };
 
   const listeners = new Set<() => void>();

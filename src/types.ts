@@ -68,4 +68,5 @@ export interface AppState {
   original: Mus4Tub | null;
   samples: Sample[];
   filter: FilterState;
+  filteredSamples: Sample[];
 }
