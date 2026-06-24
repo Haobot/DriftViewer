@@ -4,6 +4,7 @@ import { createStore } from './store';
 import { createUI } from './ui';
 import { createChart } from './chart';
 import { CHANNELS } from './channels';
+import { buildExportPackage, downloadExport } from './exporter';
 
 function initApp() {
   const store = createStore();
@@ -13,6 +14,7 @@ function initApp() {
     height: 360,
     padding: { top: 20, right: 20, bottom: 30, left: 44 },
   });
+  const exportBtn = document.getElementById('exportBtn') as HTMLButtonElement;
 
   let lastConditionsJson = JSON.stringify(store.getState().filter.conditions);
 
@@ -40,11 +42,37 @@ function initApp() {
     ui.updateRangeValues(state.filter.timeStartMs, state.filter.timeEndMs);
   };
 
+  function doExport() {
+    const state = store.getState();
+    if (!state.original || state.filteredSamples.length === 0) return;
+    const data = buildExportPackage(state.original, state.filteredSamples);
+    downloadExport(data);
+  }
+
   const ui = createUI(store, render);
   chart.onRangeSelect((startMs, endMs) => {
     store.setTimeRange(Math.min(startMs, endMs), Math.max(startMs, endMs));
   });
   store.subscribe(render);
+  exportBtn.addEventListener('click', doExport);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      const state = store.getState();
+      if (state.samples.length === 0) return;
+      store.setTimeRange(state.samples[0].t, state.samples[state.samples.length - 1].t);
+      ui.updateRangeInputs(state.samples);
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
+      e.preventDefault();
+      doExport();
+    }
+
+    if (e.key === 'Escape') {
+      chart.cancelDrag();
+    }
+  });
   window.addEventListener('resize', () => { chart.resize(); render(); });
 }
 
