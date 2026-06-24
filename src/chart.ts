@@ -71,6 +71,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
   let lastSamples: Sample[] = [];
+  let lastVisibleChannels: Map<ChannelKey, { color: string; min: number; max: number }> = new Map();
 
   const drawSelection = (startX: number, endX: number) => {
     const { padding, height } = config;
@@ -123,6 +124,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     if (!isDragging) return;
     const pos = getMousePos(e);
     dragEndX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
+    draw(lastSamples, lastVisibleChannels);
   };
 
   const handleMouseUp = () => {
@@ -138,6 +140,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
 
   const draw = (samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) => {
     lastSamples = samples;
+    lastVisibleChannels = visibleChannels;
     drawGrid();
     for (const [key, meta] of visibleChannels) {
       drawSeries(samples, key, meta.color, meta.min, meta.max);

@@ -56,8 +56,12 @@ export function createUI(store: Store, render: () => void) {
   }
 
   function updateRangeValues(startMs: number, endMs: number) {
-    timeStart.value = String(startMs);
-    timeEnd.value = String(endMs);
+    if (document.activeElement !== timeStart && timeStart.value !== String(startMs)) {
+      timeStart.value = String(startMs);
+    }
+    if (document.activeElement !== timeEnd && timeEnd.value !== String(endMs)) {
+      timeEnd.value = String(endMs);
+    }
   }
 
   function onRangeChange() {
