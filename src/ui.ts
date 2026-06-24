@@ -3,6 +3,7 @@ import { CHANNELS } from './channels';
 import { loadFile, type LoadResult } from './loader';
 
 export function createUI(store: Store, render: () => void) {
+  void render; // used via store.subscribe(render) in main.ts
   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
   const dropZone = document.getElementById('dropZone') as HTMLDivElement;
   const workspace = document.getElementById('workspace') as HTMLDivElement;
@@ -23,7 +24,6 @@ export function createUI(store: Store, render: () => void) {
       dropZone.hidden = true;
       workspace.hidden = false;
       updateRangeInputs(result.samples);
-      render();
     });
   }
 
@@ -59,7 +59,6 @@ export function createUI(store: Store, render: () => void) {
     const start = Number(timeStart.value);
     const end = Number(timeEnd.value);
     store.setTimeRange(Math.min(start, end), Math.max(start, end));
-    render();
   }
 
   timeStart.addEventListener('input', onRangeChange);
@@ -69,7 +68,6 @@ export function createUI(store: Store, render: () => void) {
     if (state.samples.length === 0) return;
     store.setTimeRange(state.samples[0].t, state.samples[state.samples.length - 1].t);
     updateRangeInputs(state.samples);
-    render();
   });
 
   function renderChannelList() {
@@ -85,7 +83,6 @@ export function createUI(store: Store, render: () => void) {
         if ((e.target as HTMLInputElement).checked) next.add(ch.key);
         else next.delete(ch.key);
         store.setVisibleChannels(next);
-        render();
       });
       channelList.appendChild(tag);
     });
