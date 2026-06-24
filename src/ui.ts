@@ -125,11 +125,29 @@ export function createUI(store: Store, render: () => void) {
     const state = store.getState();
     const samples = state.filteredSamples;
     statusCards.innerHTML = '';
-    const cards = [
-      { label: 'Samples', value: String(samples.length) },
-      { label: 'Duration', value: samples.length > 1 ? `${((samples[samples.length - 1].t - samples[0].t) / 1000).toFixed(1)}s` : '0s' },
-      { label: 'Raw', value: String(state.samples.length) },
-    ];
+
+    let cards: { label: string; value: string }[];
+
+    if (state.samples.length === 0) {
+      cards = [{ label: 'Samples', value: '0' }];
+    } else {
+      const durationSeconds = samples.length > 1 ? (samples[samples.length - 1].t - samples[0].t) / 1000 : 0;
+      const rate = durationSeconds > 0 ? (samples.length / durationSeconds).toFixed(1) : '-';
+      const filteredPercent = state.samples.length > 0
+        ? `${((samples.length / state.samples.length) * 100).toFixed(1)}%`
+        : '0%';
+
+      cards = [
+        { label: 'Samples', value: String(samples.length) },
+        { label: 'Duration', value: durationSeconds > 0 ? `${durationSeconds.toFixed(1)}s` : '0s' },
+        { label: 'Rate', value: `${rate} Hz` },
+        { label: 'Channels', value: String(state.filter.visibleChannels.size) },
+        { label: 'Conditions', value: String(state.filter.conditions.length) },
+        { label: 'Filtered', value: filteredPercent },
+        { label: 'Raw', value: String(state.samples.length) },
+      ];
+    }
+
     cards.forEach((c) => {
       const div = document.createElement('div');
       div.className = 'statusCard';
