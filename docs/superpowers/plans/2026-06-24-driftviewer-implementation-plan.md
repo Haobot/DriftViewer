@@ -308,7 +308,7 @@ export interface Sample {
   dc?: number;
 }
 
-export type ChannelKey = keyof Sample;
+export type ChannelKey = Exclude<keyof Sample, 'seq' | 't' | 'dt'>;
 
 export interface ChannelDef {
   key: ChannelKey;
@@ -329,7 +329,7 @@ export interface Condition {
 export interface FilterState {
   timeStartMs: number;
   timeEndMs: number;
-  visibleChannels: Set<string>;
+  visibleChannels: Set<ChannelKey>;
   conditions: Condition[];
 }
 
@@ -343,7 +343,7 @@ export interface AppState {
 - [ ] **Step 2: 创建 src/channels.ts**
 
 ```typescript
-import type { ChannelDef } from './types';
+import type { ChannelDef, ChannelKey } from './types';
 
 export const CHANNELS: ChannelDef[] = [
   { key: 'thr', label: 'Throttle', color: '#39d98a', defaultVisible: true, category: 'Output' },
@@ -374,7 +374,7 @@ export const CHANNELS: ChannelDef[] = [
   { key: 'az', label: 'AccelZ', color: '#a3e635', category: 'IMU', unit: 'm/s²' },
 ];
 
-export function getDefaultVisibleChannels(): Set<string> {
+export function getDefaultVisibleChannels(): Set<ChannelKey> {
   return new Set(CHANNELS.filter((c) => c.defaultVisible).map((c) => c.key));
 }
 ```
@@ -592,7 +592,7 @@ git commit -m "feat: add mus4-tub loader with schema validation and tests"
 - [ ] **Step 1: 创建 src/store.ts**
 
 ```typescript
-import type { AppState, FilterState, Mus4Tub, Sample } from './types';
+import type { AppState, ChannelKey, FilterState, Mus4Tub, Sample } from './types';
 import { getDefaultVisibleChannels } from './channels';
 
 export function createEmptyFilter(): FilterState {
@@ -629,7 +629,7 @@ export function createStore() {
       state.filter.timeEndMs = end;
       listeners.forEach((fn) => fn());
     },
-    setVisibleChannels: (channels: Set<string>) => {
+    setVisibleChannels: (channels: Set<ChannelKey>) => {
       state.filter.visibleChannels = channels;
       listeners.forEach((fn) => fn());
     },
@@ -671,7 +671,7 @@ git commit -m "feat: add reactive store for app state and filters"
 - [ ] **Step 1: 创建 src/chart.ts**
 
 ```typescript
-import type { Sample } from './types';
+import type { Sample, ChannelKey } from './types';
 
 export interface ChartConfig {
   width: number;
@@ -708,7 +708,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     }
   }
 
-  function drawSeries(samples: Sample[], key: keyof Sample, color: string, min: number, max: number) {
+  function drawSeries(samples: Sample[], key: ChannelKey, color: string, min: number, max: number) {
     if (samples.length < 2) return;
     const { width, height, padding } = config;
     const plotW = width - padding.left - padding.right;
@@ -731,10 +731,10 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     ctx.stroke();
   }
 
-  function draw(samples: Sample[], visibleChannels: Map<string, { color: string; min: number; max: number }>) {
+  function draw(samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) {
     drawGrid();
     for (const [key, meta] of visibleChannels) {
-      drawSeries(samples, key as keyof Sample, meta.color, meta.min, meta.max);
+      drawSeries(samples, key, meta.color, meta.min, meta.max);
     }
   }
 
@@ -1169,6 +1169,7 @@ export function createUI(store: Store, render: () => void) {
 
 ```typescript
 import './style.css';
+import type { ChannelKey } from './types';
 import { createStore } from './store';
 import { createUI } from './ui';
 import { createChart } from './chart';
@@ -1185,11 +1186,11 @@ function initApp() {
 
   const ui = createUI(store, () => {
     const state = store.getState();
-    const visible = new Map<string, { color: string; min: number; max: number }>();
+    const visible = new Map<ChannelKey, { color: string; min: number; max: number }>();
     state.filter.visibleChannels.forEach((key) => {
       const ch = CHANNELS.find((c) => c.key === key);
       if (!ch) return;
-      const values = state.samples.map((s) => Number(s[key as keyof typeof s] ?? 0));
+      const values = state.samples.map((s) => Number(s[key] ?? 0));
       const min = Math.min(...values);
       const max = Math.max(...values);
       visible.set(key, { color: ch.color, min, max });
@@ -1218,11 +1219,11 @@ initApp();
 ```typescript
   const render = () => {
     const state = store.getState();
-    const visible = new Map<string, { color: string; min: number; max: number }>();
+    const visible = new Map<ChannelKey, { color: string; min: number; max: number }>();
     state.filter.visibleChannels.forEach((key) => {
       const ch = CHANNELS.find((c) => c.key === key);
       if (!ch) return;
-      const values = state.samples.map((s) => Number(s[key as keyof typeof s] ?? 0));
+      const values = state.samples.map((s) => Number(s[key] ?? 0));
       const min = Math.min(...values);
       const max = Math.max(...values);
       visible.set(key, { color: ch.color, min, max });
@@ -1267,6 +1268,7 @@ git commit -m "feat: add file drop, channel toggles, time sliders and status car
 
 ```typescript
 import './style.css';
+import type { ChannelKey } from './types';
 import { createStore } from './store';
 import { createUI } from './ui';
 import { createChart } from './chart';
@@ -1285,11 +1287,11 @@ function initApp() {
   const render = () => {
     const state = store.getState();
     const filtered = filterSamples(state.samples, state.filter);
-    const visible = new Map<string, { color: string; min: number; max: number }>();
+    const visible = new Map<ChannelKey, { color: string; min: number; max: number }>();
     state.filter.visibleChannels.forEach((key) => {
       const ch = CHANNELS.find((c) => c.key === key);
       if (!ch) return;
-      const values = filtered.map((s) => Number(s[key as keyof typeof s] ?? 0));
+      const values = filtered.map((s) => Number(s[key] ?? 0));
       const min = Math.min(...values);
       const max = Math.max(...values);
       visible.set(key, { color: ch.color, min, max });
@@ -1579,10 +1581,10 @@ git commit -m "feat: add tub exporter and tests"
 
 - [ ] **Step 3: 修改 src/ui.ts 添加条件渲染逻辑**
 
-确保 `src/ui.ts` 引入 `Condition`：
+确保 `src/ui.ts` 引入 `Condition` 和 `ChannelKey`：
 
 ```typescript
-import type { Sample, Condition } from './types';
+import type { Sample, Condition, ChannelKey } from './types';
 ```
 
 在 `createUI` 内新增：
@@ -1622,7 +1624,7 @@ import type { Sample, Condition } from './types';
       const update = () => {
         const next = [...store.getState().filter.conditions];
         next[index] = {
-          channel: channelSelect.value as keyof Sample,
+          channel: channelSelect.value as ChannelKey,
           op: (row.querySelector('.op') as HTMLSelectElement).value as Condition['op'],
           value: Number((row.querySelector('.value') as HTMLInputElement).value),
           combine: index > 0 ? (row.querySelector('.combine') as HTMLSelectElement).value as Condition['combine'] : 'AND',
