@@ -75,7 +75,6 @@ body {
 }
 
 .chartCanvas {
-  height: 360px;
   background: #0d1117;
   border-radius: 6px;
 }
