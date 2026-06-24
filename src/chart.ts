@@ -56,9 +56,8 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const x = padding.left + ((s.t - tStart) / tRange) * plotW;
-      const y = valueRange === 0
-        ? midY
-        : padding.top + (1 - (Number(s[key] ?? 0) - min) / valueRange) * plotH;
+      const normalized = valueRange === 0 ? 0 : 2 * ((Number(s[key] ?? 0) - min) / valueRange) - 1;
+      const y = midY - normalized * (plotH / 2);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -89,13 +88,12 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     ctx.restore();
   };
 
-  const drawYAxis = () => {
-    if (lastVisibleChannels.size === 0) return;
-    const { width, height, padding } = config;
+  const drawLeftYAxis = () => {
+    const { height, padding } = config;
     const plotH = height - padding.top - padding.bottom;
-    const x = width - padding.right;
-    const first = Array.from(lastVisibleChannels.entries())[0];
-    const [key, meta] = first;
+    const x = padding.left;
+    const minValue = -1;
+    const maxValue = 1;
 
     ctx.save();
     ctx.strokeStyle = '#5a6b7d';
@@ -113,12 +111,74 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     for (let i = 0; i <= 4; i++) {
       const y = padding.top + (i * plotH) / 4;
       const ratio = 1 - i / 4;
-      const value = meta.min + ratio * (meta.max - meta.min);
+      const value = minValue + ratio * (maxValue - minValue);
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x - 5, y);
       ctx.stroke();
-      ctx.fillText(`${value.toFixed(0)} ${key}`, x - 7, y);
+      ctx.fillText(value.toFixed(1), x - 7, y);
+    }
+    ctx.restore();
+  };
+
+  const drawXAxis = () => {
+    if (lastSamples.length < 2) return;
+    const { width, height, padding } = config;
+    const plotW = width - padding.left - padding.right;
+    const y = height - padding.bottom;
+    const tStart = lastSamples[0].t;
+    const tEnd = lastSamples[lastSamples.length - 1].t;
+    const tRange = tEnd - tStart || 1;
+    const durationSeconds = tRange / 1000;
+    const useDecimals = durationSeconds < 1;
+
+    ctx.save();
+    ctx.strokeStyle = '#5a6b7d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8fa1b5';
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    if (useDecimals) {
+      const tickCount = Math.max(3, Math.min(6, Math.floor(plotW / 80)));
+      for (let i = 0; i <= tickCount; i++) {
+        const ratio = i / tickCount;
+        const x = padding.left + ratio * plotW;
+        const t = tStart + ratio * tRange;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + 5);
+        ctx.stroke();
+        ctx.fillText(`${(t / 1000).toFixed(2)}s`, x, y + 7);
+      }
+    } else {
+      const rawStep = durationSeconds / 6;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const normalized = rawStep / magnitude;
+      let step: number;
+      if (normalized <= 1) step = 1 * magnitude;
+      else if (normalized <= 2) step = 2 * magnitude;
+      else if (normalized <= 5) step = 5 * magnitude;
+      else step = 10 * magnitude;
+
+      const startSec = Math.ceil((tStart / 1000) / step) * step;
+      const endSec = Math.floor((tEnd / 1000) / step) * step;
+      for (let sec = startSec; sec <= endSec + 1e-9; sec += step) {
+        const t = sec * 1000;
+        const ratio = (t - tStart) / tRange;
+        const x = padding.left + clamp(ratio, 0, 1) * plotW;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + 5);
+        ctx.stroke();
+        ctx.fillText(`${Math.round(sec)}s`, x, y + 7);
+      }
     }
     ctx.restore();
   };
@@ -244,7 +304,8 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     for (const [key, meta] of visibleChannels) {
       drawSeries(samples, key, meta.color, meta.min, meta.max);
     }
-    drawYAxis();
+    drawLeftYAxis();
+    drawXAxis();
     drawCrosshair();
     if (isDragging) {
       drawSelection(dragStartX, dragEndX);
