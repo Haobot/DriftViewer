@@ -209,6 +209,7 @@ export function createUI(store: Store, render: () => void) {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.textContent = '×';
+        removeBtn.setAttribute('aria-label', '移除条件');
         removeBtn.addEventListener('click', () => {
           const next = readConditions();
           next.splice(index, 1);
