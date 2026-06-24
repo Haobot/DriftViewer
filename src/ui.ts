@@ -112,5 +112,5 @@ export function createUI(store: Store, render: () => void) {
     }
   }
 
-  return { renderChannelList, renderStatusCards, rangeInfo };
+  return { renderChannelList, renderStatusCards, rangeInfo, updateRangeInputs };
 }
