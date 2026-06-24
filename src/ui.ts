@@ -133,9 +133,7 @@ export function createUI(store: Store, render: () => void) {
     } else {
       const durationSeconds = samples.length > 1 ? (samples[samples.length - 1].t - samples[0].t) / 1000 : 0;
       const rate = durationSeconds > 0 ? (samples.length / durationSeconds).toFixed(1) : '-';
-      const filteredPercent = state.samples.length > 0
-        ? `${((samples.length / state.samples.length) * 100).toFixed(1)}%`
-        : '0%';
+      const filteredPercent = `${((samples.length / state.samples.length) * 100).toFixed(1)}%`;
 
       cards = [
         { label: 'Samples', value: String(samples.length) },
