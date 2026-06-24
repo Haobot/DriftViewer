@@ -14,6 +14,8 @@ function initApp() {
     padding: { top: 20, right: 20, bottom: 30, left: 44 },
   });
 
+  let lastConditionsJson = JSON.stringify(store.getState().filter.conditions);
+
   const render = () => {
     const state = store.getState();
     const visible = new Map<ChannelKey, { color: string; min: number; max: number }>();
@@ -28,7 +30,13 @@ function initApp() {
     chart.draw(state.filteredSamples, visible);
     ui.renderChannelList();
     ui.renderStatusCards();
-    ui.renderConditions();
+
+    const conditionsJson = JSON.stringify(state.filter.conditions);
+    if (conditionsJson !== lastConditionsJson) {
+      ui.renderConditions();
+      lastConditionsJson = conditionsJson;
+    }
+
     ui.updateRangeValues(state.filter.timeStartMs, state.filter.timeEndMs);
   };
 

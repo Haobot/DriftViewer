@@ -185,6 +185,12 @@ body {
   cursor: pointer;
 }
 
+.conditionRow button:hover,
+.conditionRow button:focus {
+  outline: none;
+  text-shadow: 0 0 6px var(--red);
+}
+
 .addCondition {
   padding: 6px 12px;
   background: transparent;
