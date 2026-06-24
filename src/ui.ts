@@ -51,13 +51,31 @@ export function createUI(store: Store, render: () => void) {
     if (file) handleFile(file);
   });
 
+  let dragCounter = 0;
+
+  dropZone.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (dragCounter === 1) {
+      dropZone.classList.add('dragOver');
+    }
+  });
+
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('dragOver');
   });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragOver'));
+
+  dropZone.addEventListener('dragleave', () => {
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      dropZone.classList.remove('dragOver');
+    }
+  });
+
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
+    dragCounter = 0;
     dropZone.classList.remove('dragOver');
     const file = e.dataTransfer?.files[0];
     if (file) handleFile(file);
