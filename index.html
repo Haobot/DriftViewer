@@ -19,6 +19,25 @@
           <p>拖拽 mus4-tub.json 到此处</p>
           <p class="hint">或点击右上角「打开文件」</p>
         </div>
+        <div id="workspace" class="workspace" hidden>
+          <div id="statusCards" class="statusCards"></div>
+          <div class="chartPanel">
+            <canvas id="chartCanvas" class="chartCanvas"></canvas>
+          </div>
+          <div class="controlsPanel">
+            <div class="controlGroup">
+              <label>时间范围</label>
+              <input id="timeStart" type="range" />
+              <input id="timeEnd" type="range" />
+              <button id="resetRange">重置</button>
+              <span id="rangeInfo"></span>
+            </div>
+            <div class="controlGroup">
+              <label>通道</label>
+              <div id="channelList" class="channelList"></div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>
