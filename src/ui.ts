@@ -53,12 +53,12 @@ export function createUI(store: Store, render: () => void) {
 
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('dragover');
+    dropZone.classList.add('dragOver');
   });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragOver'));
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('dragover');
+    dropZone.classList.remove('dragOver');
     const file = e.dataTransfer?.files[0];
     if (file) handleFile(file);
   });
