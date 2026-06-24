@@ -32,13 +32,13 @@ describe('filterSamples', () => {
   });
 
   it('filters by single condition', () => {
-    const state = { ...baseFilter(), conditions: [{ channel: 'thr', op: '>', value: 15, combine: 'AND' }] };
+    const state: FilterState = { ...baseFilter(), conditions: [{ channel: 'thr', op: '>', value: 15, combine: 'AND' }] };
     const result = filterSamples(makeSamples(), state);
     expect(result).toHaveLength(2);
   });
 
   it('combines conditions with AND', () => {
-    const state = { ...baseFilter(), conditions: [
+    const state: FilterState = { ...baseFilter(), conditions: [
       { channel: 'thr', op: '>', value: 15, combine: 'AND' },
       { channel: 'mode', op: '==', value: 2, combine: 'AND' },
     ] };
@@ -48,7 +48,7 @@ describe('filterSamples', () => {
   });
 
   it('combines conditions with OR', () => {
-    const state = { ...baseFilter(), conditions: [
+    const state: FilterState = { ...baseFilter(), conditions: [
       { channel: 'mode', op: '==', value: 0, combine: 'AND' },
       { channel: 'mode', op: '==', value: 2, combine: 'OR' },
     ] };
@@ -66,14 +66,14 @@ describe('filterSamples', () => {
   });
 
   it('supports != operator', () => {
-    const state = { ...baseFilter(), conditions: [{ channel: 'mode', op: '!=', value: 0, combine: 'AND' }] };
+    const state: FilterState = { ...baseFilter(), conditions: [{ channel: 'mode', op: '!=', value: 0, combine: 'AND' }] };
     const result = filterSamples(makeSamples(), state);
     expect(result).toHaveLength(2);
     expect(result.every((s) => s.mode !== 0)).toBe(true);
   });
 
   it('returns empty array when no condition matches', () => {
-    const state = { ...baseFilter(), conditions: [{ channel: 'thr', op: '>', value: 100, combine: 'AND' }] };
+    const state: FilterState = { ...baseFilter(), conditions: [{ channel: 'thr', op: '>', value: 100, combine: 'AND' }] };
     expect(filterSamples(makeSamples(), state)).toHaveLength(0);
   });
 });
