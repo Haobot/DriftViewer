@@ -6,6 +6,16 @@ import { createChart } from './chart';
 import { CHANNELS } from './channels';
 import { buildExportPackage, downloadExport } from './exporter';
 
+function isTypingTarget(e: KeyboardEvent): boolean {
+  const target = e.target as HTMLElement;
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
+}
+
 function initApp() {
   const store = createStore();
   const canvas = document.getElementById('chartCanvas') as HTMLCanvasElement;
@@ -56,7 +66,7 @@ function initApp() {
   store.subscribe(render);
   exportBtn.addEventListener('click', doExport);
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'r' || e.key === 'R') {
+    if ((e.key === 'r' || e.key === 'R') && !isTypingTarget(e) && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       const state = store.getState();
       if (state.samples.length === 0) return;
