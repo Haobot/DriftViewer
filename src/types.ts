@@ -39,7 +39,7 @@ export interface Sample {
   dc?: number;
 }
 
-export type ChannelKey = keyof Sample;
+export type ChannelKey = Exclude<keyof Sample, 'seq' | 't' | 'dt'>;
 
 export interface ChannelDef {
   key: ChannelKey;
@@ -60,7 +60,7 @@ export interface Condition {
 export interface FilterState {
   timeStartMs: number;
   timeEndMs: number;
-  visibleChannels: Set<string>;
+  visibleChannels: Set<ChannelKey>;
   conditions: Condition[];
 }
 

@@ -1,4 +1,4 @@
-import type { ChannelDef } from './types';
+import type { ChannelDef, ChannelKey } from './types';
 
 export const CHANNELS: ChannelDef[] = [
   { key: 'thr', label: 'Throttle', color: '#39d98a', defaultVisible: true, category: 'Output' },
@@ -29,6 +29,6 @@ export const CHANNELS: ChannelDef[] = [
   { key: 'az', label: 'AccelZ', color: '#a3e635', category: 'IMU', unit: 'm/s²' },
 ];
 
-export function getDefaultVisibleChannels(): Set<string> {
+export function getDefaultVisibleChannels(): Set<ChannelKey> {
   return new Set(CHANNELS.filter((c) => c.defaultVisible).map((c) => c.key));
 }
