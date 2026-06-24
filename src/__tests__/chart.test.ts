@@ -33,7 +33,7 @@ function makeContext(): CanvasRenderingContext2D {
 function makeCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const ctx = makeContext();
-  canvas.getContext = vi.fn((type: string) => (type === '2d' ? ctx : null));
+  canvas.getContext = vi.fn((type: string) => (type === '2d' ? ctx : null)) as typeof canvas.getContext;
   canvas.getBoundingClientRect = vi.fn(() => ({
     x: 0,
     y: 0,
