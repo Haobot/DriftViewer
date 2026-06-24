@@ -1,5 +1,6 @@
 import type { AppState, ChannelKey, FilterState, Mus4Tub, Sample } from './types';
 import { getDefaultVisibleChannels } from './channels';
+import { filterSamples } from './filter';
 
 export function createEmptyFilter(): FilterState {
   return {
@@ -20,6 +21,11 @@ export function createStore() {
 
   const listeners = new Set<() => void>();
 
+  const recompute = () => {
+    state.filteredSamples = filterSamples(state.samples, state.filter);
+  };
+  recompute();
+
   return {
     /**
      * Returns a shallow snapshot of the current app state. The `samples`
@@ -28,12 +34,14 @@ export function createStore() {
      * so that subscribers are notified.
      */
     getState: () => ({
-      ...state,
+      original: state.original,
+      samples: state.samples,
       filter: {
         ...state.filter,
         visibleChannels: new Set(state.filter.visibleChannels),
         conditions: state.filter.conditions.map((c) => ({ ...c })),
       },
+      filteredSamples: state.filteredSamples,
     }),
     setOriginal: (data: Mus4Tub, samples: Sample[]) => {
       state.original = data;
@@ -42,19 +50,23 @@ export function createStore() {
         state.filter.timeStartMs = samples[0].t;
         state.filter.timeEndMs = samples[samples.length - 1].t;
       }
+      recompute();
       listeners.forEach((fn) => fn());
     },
     setTimeRange: (start: number, end: number) => {
       state.filter.timeStartMs = start;
       state.filter.timeEndMs = end;
+      recompute();
       listeners.forEach((fn) => fn());
     },
     setVisibleChannels: (channels: Set<ChannelKey>) => {
       state.filter.visibleChannels = channels;
+      recompute();
       listeners.forEach((fn) => fn());
     },
     setConditions: (conditions: FilterState['conditions']) => {
       state.filter.conditions = conditions;
+      recompute();
       listeners.forEach((fn) => fn());
     },
     subscribe: (fn: () => void) => {
