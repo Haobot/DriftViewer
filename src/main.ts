@@ -28,6 +28,7 @@ function initApp() {
     chart.draw(state.filteredSamples, visible);
     ui.renderChannelList();
     ui.renderStatusCards();
+    ui.renderConditions();
     ui.updateRangeValues(state.filter.timeStartMs, state.filter.timeEndMs);
   };
 
