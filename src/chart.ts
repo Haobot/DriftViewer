@@ -111,7 +111,7 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     dragEndX = dragStartX;
   });
 
-  window.addEventListener('mousemove', (e) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
     const pos = getMousePos(e);
     dragEndX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
@@ -119,15 +119,18 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
       rangeCallback(xToTimeMs(dragStartX), xToTimeMs(dragEndX));
     }
     draw(lastSamples, lastVisibleChannels);
-  });
+  };
 
-  window.addEventListener('mouseup', () => {
+  const handleMouseUp = () => {
     if (!isDragging) return;
     isDragging = false;
     if (Math.abs(dragEndX - dragStartX) > 4 && rangeCallback) {
       rangeCallback(xToTimeMs(dragStartX), xToTimeMs(dragEndX));
     }
-  });
+  };
+
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
 
   const draw = (samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) => {
     lastSamples = samples;
@@ -149,6 +152,10 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     onRangeSelect: (callback: (startMs: number, endMs: number) => void) => {
       rangeCallback = callback;
       return () => { rangeCallback = null; };
+    },
+    destroy: () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     },
   };
 }
