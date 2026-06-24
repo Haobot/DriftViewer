@@ -227,7 +227,12 @@ export function createUI(store: Store, render: () => void) {
         valueInput.addEventListener('change', onChange);
         combineSelect.addEventListener('change', onChange);
 
-        conditionList.appendChild(row);
+        const before = conditionList.children[index];
+        if (before) {
+          conditionList.insertBefore(row, before);
+        } else {
+          conditionList.appendChild(row);
+        }
       } else {
         // Update value only if not focused
         const valueInput = row.querySelector('.condValue') as HTMLInputElement;
