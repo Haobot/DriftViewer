@@ -1,4 +1,5 @@
 import type { Store } from './store';
+import type { Condition } from './types';
 import { CHANNELS } from './channels';
 import { loadFile, type LoadResult } from './loader';
 
@@ -13,6 +14,24 @@ export function createUI(store: Store, render: () => void) {
   const rangeInfo = document.getElementById('rangeInfo') as HTMLSpanElement;
   const channelList = document.getElementById('channelList') as HTMLDivElement;
   const statusCards = document.getElementById('statusCards') as HTMLDivElement;
+  const conditionList = document.getElementById('conditionList') as HTMLDivElement;
+  const addCondition = document.getElementById('addCondition') as HTMLButtonElement;
+
+  const OPS: Condition['op'][] = ['==', '!=', '<', '<=', '>', '>='];
+  const COMBINES: Condition['combine'][] = ['AND', 'OR'];
+
+  function readConditions(): Condition[] {
+    const rows = conditionList.querySelectorAll('.conditionRow');
+    const conditions: Condition[] = [];
+    rows.forEach((row) => {
+      const channel = (row.querySelector('.condChannel') as HTMLSelectElement).value as Condition['channel'];
+      const op = (row.querySelector('.condOp') as HTMLSelectElement).value as Condition['op'];
+      const value = Number((row.querySelector('.condValue') as HTMLInputElement).value);
+      const combine = (row.querySelector('.condCombine') as HTMLSelectElement).value as Condition['combine'];
+      conditions.push({ channel, op, value: Number.isNaN(value) ? 0 : value, combine });
+    });
+    return conditions;
+  }
 
   function handleFile(file: File) {
     loadFile(file).then((result: LoadResult) => {
@@ -78,6 +97,11 @@ export function createUI(store: Store, render: () => void) {
     store.setTimeRange(state.samples[0].t, state.samples[state.samples.length - 1].t);
     updateRangeInputs(state.samples);
   });
+  addCondition.addEventListener('click', () => {
+    const next = readConditions();
+    next.push({ channel: 'thr', op: '>', value: 0, combine: 'AND' });
+    store.setConditions(next);
+  });
 
   function renderChannelList() {
     channelList.innerHTML = '';
@@ -121,5 +145,74 @@ export function createUI(store: Store, render: () => void) {
     }
   }
 
-  return { renderChannelList, renderStatusCards, rangeInfo, updateRangeInputs, updateRangeValues };
+  function renderConditions() {
+    const conditions = store.getState().filter.conditions;
+    conditionList.innerHTML = '';
+
+    conditions.forEach((cond, index) => {
+      const row = document.createElement('div');
+      row.className = 'conditionRow';
+
+      const channelSelect = document.createElement('select');
+      channelSelect.className = 'condChannel';
+      CHANNELS.forEach((ch) => {
+        const opt = document.createElement('option');
+        opt.value = ch.key;
+        opt.textContent = ch.label;
+        if (ch.key === cond.channel) opt.selected = true;
+        channelSelect.appendChild(opt);
+      });
+
+      const opSelect = document.createElement('select');
+      opSelect.className = 'condOp';
+      OPS.forEach((op) => {
+        const opt = document.createElement('option');
+        opt.value = op;
+        opt.textContent = op;
+        if (op === cond.op) opt.selected = true;
+        opSelect.appendChild(opt);
+      });
+
+      const valueInput = document.createElement('input');
+      valueInput.className = 'condValue';
+      valueInput.type = 'number';
+      valueInput.value = String(cond.value);
+
+      const combineSelect = document.createElement('select');
+      combineSelect.className = 'condCombine';
+      COMBINES.forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        if (c === cond.combine) opt.selected = true;
+        combineSelect.appendChild(opt);
+      });
+      combineSelect.hidden = index === 0;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        const next = readConditions();
+        next.splice(index, 1);
+        store.setConditions(next);
+      });
+
+      row.appendChild(channelSelect);
+      row.appendChild(opSelect);
+      row.appendChild(valueInput);
+      row.appendChild(combineSelect);
+      row.appendChild(removeBtn);
+
+      const onChange = () => store.setConditions(readConditions());
+      channelSelect.addEventListener('change', onChange);
+      opSelect.addEventListener('change', onChange);
+      valueInput.addEventListener('input', onChange);
+      combineSelect.addEventListener('change', onChange);
+
+      conditionList.appendChild(row);
+    });
+  }
+
+  return { renderChannelList, renderStatusCards, renderConditions, rangeInfo, updateRangeInputs, updateRangeValues };
 }
