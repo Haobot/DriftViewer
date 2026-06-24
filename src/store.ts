@@ -31,7 +31,7 @@ export function createStore() {
       filter: {
         ...state.filter,
         visibleChannels: new Set(state.filter.visibleChannels),
-        conditions: [...state.filter.conditions],
+        conditions: state.filter.conditions.map((c) => ({ ...c })),
       },
     }),
     setOriginal: (data: Mus4Tub, samples: Sample[]) => {
