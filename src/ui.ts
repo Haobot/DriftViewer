@@ -90,13 +90,12 @@ export function createUI(store: Store, render: () => void) {
 
   function renderStatusCards() {
     const state = store.getState();
-    const samples = state.samples;
-    const filtered = state.samples;
+    const samples = state.filteredSamples;
     statusCards.innerHTML = '';
     const cards = [
       { label: 'Samples', value: String(samples.length) },
       { label: 'Duration', value: samples.length > 1 ? `${((samples[samples.length - 1].t - samples[0].t) / 1000).toFixed(1)}s` : '0s' },
-      { label: 'Filtered', value: String(filtered.length) },
+      { label: 'Raw', value: String(state.samples.length) },
     ];
     cards.forEach((c) => {
       const div = document.createElement('div');
@@ -104,6 +103,13 @@ export function createUI(store: Store, render: () => void) {
       div.innerHTML = `<div class="label">${c.label}</div><div class="value">${c.value}</div>`;
       statusCards.appendChild(div);
     });
+
+    if (rangeInfo) {
+      const f = state.filteredSamples;
+      rangeInfo.textContent = f.length > 0
+        ? `${f.length} samples / ${((f[f.length - 1].t - f[0].t) / 1000).toFixed(1)}s`
+        : '0 samples';
+    }
   }
 
   return { renderChannelList, renderStatusCards, rangeInfo };
