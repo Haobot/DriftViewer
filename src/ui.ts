@@ -147,70 +147,96 @@ export function createUI(store: Store, render: () => void) {
 
   function renderConditions() {
     const conditions = store.getState().filter.conditions;
-    conditionList.innerHTML = '';
+    const existingRows = Array.from(conditionList.querySelectorAll('.conditionRow'));
+
+    // Remove extra rows
+    while (existingRows.length > conditions.length) {
+      const row = existingRows.pop();
+      if (row) row.remove();
+    }
 
     conditions.forEach((cond, index) => {
-      const row = document.createElement('div');
-      row.className = 'conditionRow';
+      let row = existingRows[index] as HTMLElement | undefined;
+      const channelChanged = !row || (row.querySelector('.condChannel') as HTMLSelectElement | null)?.value !== cond.channel;
+      const opChanged = !row || (row.querySelector('.condOp') as HTMLSelectElement | null)?.value !== cond.op;
+      const combineChanged = !row || (row.querySelector('.condCombine') as HTMLSelectElement | null)?.value !== cond.combine;
 
-      const channelSelect = document.createElement('select');
-      channelSelect.className = 'condChannel';
-      CHANNELS.forEach((ch) => {
-        const opt = document.createElement('option');
-        opt.value = ch.key;
-        opt.textContent = ch.label;
-        if (ch.key === cond.channel) opt.selected = true;
-        channelSelect.appendChild(opt);
-      });
+      if (channelChanged || opChanged || combineChanged) {
+        if (row) row.remove();
+        row = undefined;
+      }
 
-      const opSelect = document.createElement('select');
-      opSelect.className = 'condOp';
-      OPS.forEach((op) => {
-        const opt = document.createElement('option');
-        opt.value = op;
-        opt.textContent = op;
-        if (op === cond.op) opt.selected = true;
-        opSelect.appendChild(opt);
-      });
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'conditionRow';
 
-      const valueInput = document.createElement('input');
-      valueInput.className = 'condValue';
-      valueInput.type = 'number';
-      valueInput.value = String(cond.value);
+        const channelSelect = document.createElement('select');
+        channelSelect.className = 'condChannel';
+        CHANNELS.forEach((ch) => {
+          const opt = document.createElement('option');
+          opt.value = ch.key;
+          opt.textContent = ch.label;
+          if (ch.key === cond.channel) opt.selected = true;
+          channelSelect.appendChild(opt);
+        });
 
-      const combineSelect = document.createElement('select');
-      combineSelect.className = 'condCombine';
-      COMBINES.forEach((c) => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
-        if (c === cond.combine) opt.selected = true;
-        combineSelect.appendChild(opt);
-      });
-      combineSelect.hidden = index === 0;
+        const opSelect = document.createElement('select');
+        opSelect.className = 'condOp';
+        OPS.forEach((op) => {
+          const opt = document.createElement('option');
+          opt.value = op;
+          opt.textContent = op;
+          if (op === cond.op) opt.selected = true;
+          opSelect.appendChild(opt);
+        });
 
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.textContent = '×';
-      removeBtn.addEventListener('click', () => {
-        const next = readConditions();
-        next.splice(index, 1);
-        store.setConditions(next);
-      });
+        const valueInput = document.createElement('input');
+        valueInput.className = 'condValue';
+        valueInput.type = 'number';
+        valueInput.value = String(cond.value);
 
-      row.appendChild(channelSelect);
-      row.appendChild(opSelect);
-      row.appendChild(valueInput);
-      row.appendChild(combineSelect);
-      row.appendChild(removeBtn);
+        const combineSelect = document.createElement('select');
+        combineSelect.className = 'condCombine';
+        COMBINES.forEach((c) => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          if (c === cond.combine) opt.selected = true;
+          combineSelect.appendChild(opt);
+        });
+        combineSelect.hidden = index === 0;
 
-      const onChange = () => store.setConditions(readConditions());
-      channelSelect.addEventListener('change', onChange);
-      opSelect.addEventListener('change', onChange);
-      valueInput.addEventListener('change', onChange);
-      combineSelect.addEventListener('change', onChange);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', () => {
+          const next = readConditions();
+          next.splice(index, 1);
+          store.setConditions(next);
+        });
 
-      conditionList.appendChild(row);
+        row.appendChild(channelSelect);
+        row.appendChild(opSelect);
+        row.appendChild(valueInput);
+        row.appendChild(combineSelect);
+        row.appendChild(removeBtn);
+
+        const onChange = () => store.setConditions(readConditions());
+        channelSelect.addEventListener('change', onChange);
+        opSelect.addEventListener('change', onChange);
+        valueInput.addEventListener('change', onChange);
+        combineSelect.addEventListener('change', onChange);
+
+        conditionList.appendChild(row);
+      } else {
+        // Update value only if not focused
+        const valueInput = row.querySelector('.condValue') as HTMLInputElement;
+        if (document.activeElement !== valueInput && valueInput.value !== String(cond.value)) {
+          valueInput.value = String(cond.value);
+        }
+        const combineSelect = row.querySelector('.condCombine') as HTMLSelectElement;
+        combineSelect.hidden = index === 0;
+      }
     });
   }
 
