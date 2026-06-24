@@ -28,7 +28,7 @@ function initApp() {
     chart.draw(state.filteredSamples, visible);
     ui.renderChannelList();
     ui.renderStatusCards();
-    ui.updateRangeInputs(state.filteredSamples);
+    ui.updateRangeValues(state.filter.timeStartMs, state.filter.timeEndMs);
   };
 
   const ui = createUI(store, render);

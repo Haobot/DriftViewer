@@ -71,7 +71,6 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
   let lastSamples: Sample[] = [];
-  let lastVisibleChannels: Map<ChannelKey, { color: string; min: number; max: number }> = new Map();
 
   const drawSelection = (startX: number, endX: number) => {
     const { padding, height } = config;
@@ -95,12 +94,21 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
   const xToTimeMs = (x: number): number => {
     if (lastSamples.length < 2) return 0;
     const { padding, width } = config;
-    const plotLeft = padding.left;
     const plotW = width - padding.left - padding.right;
     const tStart = lastSamples[0].t;
     const tEnd = lastSamples[lastSamples.length - 1].t;
-    const ratio = clamp((x - plotLeft) / plotW, 0, 1);
-    return tStart + ratio * (tEnd - tStart);
+    const ratio = clamp((x - padding.left) / plotW, 0, 1);
+    const ms = tStart + ratio * (tEnd - tStart);
+    let closest = lastSamples[0].t;
+    let best = Infinity;
+    for (const s of lastSamples) {
+      const d = Math.abs(s.t - ms);
+      if (d < best) {
+        best = d;
+        closest = s.t;
+      }
+    }
+    return closest;
   };
 
   canvas.addEventListener('mousedown', (e) => {
@@ -115,10 +123,6 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     if (!isDragging) return;
     const pos = getMousePos(e);
     dragEndX = clamp(pos.x, config.padding.left, config.width - config.padding.right);
-    if (rangeCallback && Math.abs(dragEndX - dragStartX) > 4) {
-      rangeCallback(xToTimeMs(dragStartX), xToTimeMs(dragEndX));
-    }
-    draw(lastSamples, lastVisibleChannels);
   };
 
   const handleMouseUp = () => {
@@ -134,7 +138,6 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
 
   const draw = (samples: Sample[], visibleChannels: Map<ChannelKey, { color: string; min: number; max: number }>) => {
     lastSamples = samples;
-    lastVisibleChannels = visibleChannels;
     drawGrid();
     for (const [key, meta] of visibleChannels) {
       drawSeries(samples, key, meta.color, meta.min, meta.max);

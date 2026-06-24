@@ -50,9 +50,14 @@ export function createUI(store: Store, render: () => void) {
     const max = samples[samples.length - 1].t;
     timeStart.min = timeEnd.min = String(min);
     timeStart.max = timeEnd.max = String(max);
+    timeStart.step = timeEnd.step = String(Math.max(1, Math.floor((max - min) / 200)));
     timeStart.value = String(min);
     timeEnd.value = String(max);
-    timeStart.step = timeEnd.step = String(Math.max(1, Math.floor((max - min) / 200)));
+  }
+
+  function updateRangeValues(startMs: number, endMs: number) {
+    timeStart.value = String(startMs);
+    timeEnd.value = String(endMs);
   }
 
   function onRangeChange() {
@@ -112,5 +117,5 @@ export function createUI(store: Store, render: () => void) {
     }
   }
 
-  return { renderChannelList, renderStatusCards, rangeInfo, updateRangeInputs };
+  return { renderChannelList, renderStatusCards, rangeInfo, updateRangeInputs, updateRangeValues };
 }
