@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriftViewer</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>DriftViewer</h1>
+        <label class="fileButton">
+          打开文件
+          <input id="fileInput" type="file" accept=".json,application/json" hidden />
+        </label>
+      </header>
+      <main id="main" class="main">
+        <div id="dropZone" class="dropZone">
+          <p>拖拽 mus4-tub.json 到此处</p>
+          <p class="hint">或点击右上角「打开文件」</p>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
