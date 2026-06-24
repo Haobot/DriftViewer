@@ -28,10 +28,10 @@ export function createStore() {
 
   return {
     /**
-     * Returns a shallow snapshot of the current app state. The `samples`
-     * array is returned by reference for performance; treat it as read-only.
-     * Mutations should only be performed through the store's setter methods
-     * so that subscribers are notified.
+     * Returns a shallow snapshot of the current app state. The `samples` and
+     * `filteredSamples` arrays are returned by reference for performance; treat
+     * them as read-only. Mutations should only be performed through the store's
+     * setter methods so that subscribers are notified.
      */
     getState: () => ({
       original: state.original,
