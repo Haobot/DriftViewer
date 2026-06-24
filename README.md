@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-打开浏览器访问 `http://localhost:5175/`。
+打开浏览器访问 `http://localhost:5173/`（Vite 默认端口，若被占用则会自动顺延）。
 
 ## 可用命令
 
