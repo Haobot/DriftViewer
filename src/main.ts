@@ -28,9 +28,13 @@ function initApp() {
     chart.draw(state.filteredSamples, visible);
     ui.renderChannelList();
     ui.renderStatusCards();
+    ui.updateRangeInputs(state.filteredSamples);
   };
 
   const ui = createUI(store, render);
+  chart.onRangeSelect((startMs, endMs) => {
+    store.setTimeRange(Math.min(startMs, endMs), Math.max(startMs, endMs));
+  });
   store.subscribe(render);
   window.addEventListener('resize', () => { chart.resize(); render(); });
 }
