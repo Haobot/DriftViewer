@@ -55,4 +55,25 @@ describe('filterSamples', () => {
     const result = filterSamples(makeSamples(), state);
     expect(result).toHaveLength(2);
   });
+
+  it('returns empty array for empty samples', () => {
+    expect(filterSamples([], baseFilter())).toHaveLength(0);
+  });
+
+  it('returns empty array when time range has no matches', () => {
+    const state = { ...baseFilter(), timeStartMs: 5000, timeEndMs: 6000 };
+    expect(filterSamples(makeSamples(), state)).toHaveLength(0);
+  });
+
+  it('supports != operator', () => {
+    const state = { ...baseFilter(), conditions: [{ channel: 'mode', op: '!=', value: 0, combine: 'AND' }] };
+    const result = filterSamples(makeSamples(), state);
+    expect(result).toHaveLength(2);
+    expect(result.every((s) => s.mode !== 0)).toBe(true);
+  });
+
+  it('returns empty array when no condition matches', () => {
+    const state = { ...baseFilter(), conditions: [{ channel: 'thr', op: '>', value: 100, combine: 'AND' }] };
+    expect(filterSamples(makeSamples(), state)).toHaveLength(0);
+  });
 });
