@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriftViewer</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>DriftViewer</h1>
+        <label class="fileButton">
+          打开文件
+          <input id="fileInput" type="file" accept=".json,application/json" hidden />
+        </label>
+        <button id="exportBtn" type="button" class="exportBtn">导出</button>
+      </header>
+      <main id="main" class="main">
+        <div id="dropZone" class="dropZone">
+          <p>拖拽 mus4-tub.json 到此处</p>
+          <p class="hint">或点击右上角「打开文件」</p>
+        </div>
+        <div id="workspace" class="workspace" hidden>
+          <div id="statusCards" class="statusCards"></div>
+          <div class="chartPanel">
+            <div id="chartEmpty" class="chartEmpty" hidden>
+              <div class="chartEmptyIcon" aria-hidden="true">📈</div>
+              <div class="chartEmptyTitle">暂无数据</div>
+              <div class="chartEmptyHint">打开一个 mus4-tub.json 文件，或将文件拖拽到此处开始查看。</div>
+            </div>
+            <canvas id="chartCanvas" class="chartCanvas"></canvas>
+          </div>
+          <div class="controlsPanel">
+            <div class="controlGroup">
+              <label>时间范围</label>
+              <input id="timeStart" type="range" />
+              <input id="timeEnd" type="range" />
+              <button id="resetRange" type="button">重置</button>
+              <span id="rangeInfo"></span>
+            </div>
+            <div class="controlGroup">
+              <label>通道</label>
+              <div id="channelList" class="channelList"></div>
+            </div>
+            <div class="controlGroup">
+              <label>条件筛选</label>
+              <div id="conditionList" class="conditionList"></div>
+              <button id="addCondition" type="button" class="addCondition">+ 添加条件</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
