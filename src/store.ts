@@ -21,11 +21,19 @@ export function createStore() {
 
   return {
     /**
-     * Returns the current app state. The returned reference must be treated
-     * as read-only; mutations should only be performed through the store's
-     * setter methods so that subscribers are notified.
+     * Returns a shallow snapshot of the current app state. The `samples`
+     * array is returned by reference for performance; treat it as read-only.
+     * Mutations should only be performed through the store's setter methods
+     * so that subscribers are notified.
      */
-    getState: () => state,
+    getState: () => ({
+      ...state,
+      filter: {
+        ...state.filter,
+        visibleChannels: new Set(state.filter.visibleChannels),
+        conditions: [...state.filter.conditions],
+      },
+    }),
     setOriginal: (data: Mus4Tub, samples: Sample[]) => {
       state.original = data;
       state.samples = samples;
