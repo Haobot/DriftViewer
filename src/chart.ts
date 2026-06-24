@@ -43,6 +43,8 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     const tStart = samples[0].t;
     const tEnd = samples[samples.length - 1].t;
     const tRange = tEnd - tStart || 1;
+    const valueRange = max - min;
+    const midY = padding.top + plotH / 2;
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -50,8 +52,9 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const x = padding.left + ((s.t - tStart) / tRange) * plotW;
-      const value = Number(s[key] ?? 0);
-      const y = padding.top + (1 - (value - min) / (max - min)) * plotH;
+      const y = valueRange === 0
+        ? midY
+        : padding.top + (1 - (Number(s[key] ?? 0) - min) / valueRange) * plotH;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
