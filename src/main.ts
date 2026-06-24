@@ -25,7 +25,7 @@ function initApp() {
       const max = Math.max(...values);
       visible.set(key, { color: ch.color, min, max });
     });
-    chart.draw(state.samples, visible);
+    chart.draw(state.filteredSamples, visible);
     ui.renderChannelList();
     ui.renderStatusCards();
   };
