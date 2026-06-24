@@ -20,6 +20,11 @@ export function createStore() {
   const listeners = new Set<() => void>();
 
   return {
+    /**
+     * Returns the current app state. The returned reference must be treated
+     * as read-only; mutations should only be performed through the store's
+     * setter methods so that subscribers are notified.
+     */
     getState: () => state,
     setOriginal: (data: Mus4Tub, samples: Sample[]) => {
       state.original = data;
