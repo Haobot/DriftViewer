@@ -202,3 +202,20 @@ body {
 }
 
 .addCondition:hover { border-color: var(--accent); color: var(--accent); }
+
+.exportBtn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.exportBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
