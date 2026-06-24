@@ -159,6 +159,9 @@ export function createChart(canvas: HTMLCanvasElement, config: ChartConfig) {
       rangeCallback = callback;
       return () => { rangeCallback = null; };
     },
+    cancelDrag: () => {
+      isDragging = false;
+    },
     destroy: () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
